@@ -172,10 +172,12 @@ void reactToProximity() {
     case MOOD_MELANCHOLY:
       // Sad Otto shies away — backs up, sad sound
       singMelancholy();
+      isWalking = true;
       Otto.walk(2, 1000, -1);   // Back away
+      isWalking = false;
       Otto.playGesture(OttoSad);
       Otto.home();
-      shiftMood(-3); // Being approached while sad makes it sadder briefly
+      shiftMood(-3);
       break;
 
     case MOOD_ANXIOUS:
@@ -183,45 +185,51 @@ void reactToProximity() {
       singStartle();
       Otto.playGesture(OttoFretful);
       if (approaching) {
-        Otto.turn(2, 800, 1);   // Spin away
+        Otto.turn(2, 800, 1);
         Otto.turn(2, 800, -1);
       }
       Otto.home();
       singAnxious();
-      shiftMood(-5); // Startle worsens anxiety briefly
+      shiftMood(-5);
       delay(500);
-      shiftMood(3);  // Then recovers — resilience
+      shiftMood(3);
       break;
 
     case MOOD_NEUTRAL:
       // Neutral Otto is curious — leans in, investigates
       singNeutral();
-      Otto.bend(1, 800, 1);    // Lean toward visitor
+      Otto.bend(1, 800, 1);
       Otto.playGesture(OttoConfused);
       Otto.home();
       if (approaching) {
-        Otto.walk(1, 1000, 1); // Step toward it
+        isWalking = true;
+        Otto.walk(1, 1000, 1);
+        isWalking = false;
         Otto.home();
       }
-      shiftMood(4);  // Positive interaction nudges mood up
+      shiftMood(4);
       break;
 
     case MOOD_HAPPY:
       // Happy Otto gets excited — approaches, celebrates
       singHappy();
       Otto.playGesture(OttoHappy);
-      Otto.walk(2, 800, 1);    // Trot toward visitor
+      isWalking = true;
+      Otto.walk(2, 800, 1);
+      isWalking = false;
       Otto.home();
       Otto.swing(1, 600, 20);
       Otto.home();
-      shiftMood(6);  // Interaction while happy = more happy
+      shiftMood(6);
       break;
 
     case MOOD_EUPHORIC:
       // Euphoric Otto loses its mind — full dance party
       singEuphoric();
       Otto.playGesture(OttoSuperHappy);
+      isWalking = true;
       Otto.walk(2, 700, 1);
+      isWalking = false;
       Otto.moonwalker(2, 800, 25, 1);
       Otto.home();
       Otto.jump(1, 800);
@@ -262,10 +270,12 @@ void idleMedium() {
       Otto.home();
       break;
     case 3:
+      isWalking = true;
       Otto.walk(random(1,3), 900, 1);
       Otto.home();
       Otto.walk(random(1,3), 900, -1);
       Otto.home();
+      isWalking = false;
       break;
     case 4:
       singMood();
@@ -384,8 +394,32 @@ void driftMood() {
 }
 
 // ============================================================
-//  SETUP
+//  OBSTACLE AVOIDANCE
+//  Separate from mood/social system — pure safety layer
+//  Triggers only when something is within 10cm for 1 second
+//  while Otto is walking
 // ============================================================
+bool          isWalking         = false;  // True when Otto is mid-walk
+unsigned long wallDetectedTime  = 0;      // When we first saw something < 10cm
+bool          wallTimerActive   = false;  // Is the wall timer running
+
+#define WALL_DISTANCE     10    // cm — closer than this = wall
+#define WALL_CONFIRM_MS   1000  // ms — must be detected this long to confirm wall
+
+void avoidWall() {
+  // Stop, back up, turn a random amount between 90 and 180 degrees
+  tone(BUZZER_PIN, 300, 200); delay(250); // Low thud — "oof"
+  noTone(BUZZER_PIN);
+  Otto.walk(2, 900, -1);                          // Back up
+  Otto.home();
+  int turnSteps = random(2, 5);                   // 90–180 degrees roughly
+  int turnDir   = random(0, 2) == 0 ? 1 : -1;    // Random left or right
+  Otto.turn(turnSteps, 800, turnDir);
+  Otto.home();
+  isWalking       = false;
+  wallTimerActive = false;
+  wallDetectedTime = 0;
+}
 void setup() {
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
@@ -419,6 +453,20 @@ void loop() {
     prevDistance    = currentDistance;
     currentDistance = readDistance();
     lastSensorTime  = now;
+  }
+
+  // --- Wall avoidance: only triggers while walking, under 10cm for 1 second ---
+  if (isWalking && currentDistance > 0 && currentDistance < WALL_DISTANCE) {
+    if (!wallTimerActive) {
+      wallTimerActive  = true;
+      wallDetectedTime = now;
+    } else if (now - wallDetectedTime >= WALL_CONFIRM_MS) {
+      avoidWall();
+    }
+  } else {
+    // Clear wall timer if obstacle gone or not walking
+    wallTimerActive  = false;
+    wallDetectedTime = 0;
   }
 
   // --- Proximity check: something within 80cm ---
