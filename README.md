@@ -129,4 +129,4 @@ MIT License — free to use, modify, and build on. Credit appreciated but not re
 
 ---
 
-*Depphen's Depot — building things that probably shouldn't work but somehow do.*
+*Depphen's Depot — a little bit of everything, no questions asked.*
