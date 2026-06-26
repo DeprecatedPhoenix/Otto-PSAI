@@ -59,6 +59,16 @@ bool          interactionFlag   = false;  // True when someone is near
 int boredLevel = 0;
 
 // ============================================================
+//  OBSTACLE AVOIDANCE VARIABLES
+// ============================================================
+bool          isWalking         = false;
+unsigned long wallDetectedTime  = 0;
+bool          wallTimerActive   = false;
+
+#define WALL_DISTANCE     10
+#define WALL_CONFIRM_MS   1000
+
+// ============================================================
 //  ULTRASONIC SENSOR
 // ============================================================
 long prevDistance    = 999;
@@ -271,11 +281,12 @@ void idleMedium() {
       break;
     case 3:
       isWalking = true;
-      Otto.walk(random(1,3), 900, 1);
-      Otto.home();
-      Otto.walk(random(1,3), 900, -1);
+      Otto.walk(random(3, 40), 900, 1);  // Random forward exploration
       Otto.home();
       isWalking = false;
+      // Random turn after walk so he faces a new direction
+      Otto.turn(random(1, 4), 800, random(0,2) == 0 ? 1 : -1);
+      Otto.home();
       break;
     case 4:
       singMood();
@@ -292,7 +303,7 @@ void idleMedium() {
 // Large idle: dramatic attention-seeking behavior
 void idleLarge() {
   singMood();
-  int r = random(1, 7);
+  int r = random(1, 9);
   switch (r) {
     case 1:
       Otto.playGesture(OttoVictory);
@@ -320,6 +331,29 @@ void idleLarge() {
     case 6:
       Otto.playGesture(OttoFart); // Everyone loves this one
       Otto.home();
+      break;
+    case 7:
+      // Bored enough to go for a proper walk
+      isWalking = true;
+      Otto.walk(random(10, 40), 800, 1);  // Real exploration
+      Otto.home();
+      isWalking = false;
+      Otto.turn(random(2, 5), 800, random(0,2) == 0 ? 1 : -1);
+      Otto.home();
+      singMood();
+      break;
+    case 8:
+      // Walk, look around, walk again — really exploring
+      isWalking = true;
+      Otto.walk(random(8, 25), 800, 1);
+      Otto.home();
+      isWalking = false;
+      Otto.turn(random(2, 6), 800, random(0,2) == 0 ? 1 : -1);
+      Otto.home();
+      isWalking = true;
+      Otto.walk(random(8, 25), 800, 1);
+      Otto.home();
+      isWalking = false;
       break;
   }
 }
@@ -399,13 +433,6 @@ void driftMood() {
 //  Triggers only when something is within 10cm for 1 second
 //  while Otto is walking
 // ============================================================
-bool          isWalking         = false;  // True when Otto is mid-walk
-unsigned long wallDetectedTime  = 0;      // When we first saw something < 10cm
-bool          wallTimerActive   = false;  // Is the wall timer running
-
-#define WALL_DISTANCE     10    // cm — closer than this = wall
-#define WALL_CONFIRM_MS   1000  // ms — must be detected this long to confirm wall
-
 void avoidWall() {
   // Stop, back up, turn a random amount between 90 and 180 degrees
   tone(BUZZER_PIN, 300, 200); delay(250); // Low thud — "oof"
