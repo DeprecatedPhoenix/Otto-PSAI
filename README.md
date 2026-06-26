@@ -77,31 +77,40 @@ Each mood has its own melodic phrase — not just beeps:
 - Arduino Nano (ATmega328P)
 - HC-SR04 ultrasonic sensor
 - Passive buzzer
-- OttoDIYLib
+- Nano expansion shield (G/V/S three-pin header type)
 
-### Pin Defaults
+### Software Requirements
 
-| Component | Pins |
-|-----------|------|
-| Left Leg | 2 |
-| Right Leg | 3 |
-| Left Foot | 4 |
-| Right Foot | 5 |
-| Buzzer | 13 |
-| HC-SR04 Trig | 9 |
-| HC-SR04 Echo | 8 |
+- Arduino IDE 1.8.19 (recommended — IDE 2.x has known COM port issues)
+- OttoDIYLib (install via Sketch → Include Library → Manage Libraries)
+
+### Pin Reference
+
+Connect each component to the corresponding shield header. Each header has three pins: G (Ground), V (Voltage/VCC), S (Signal).
+
+| Component | Shield Header | Notes |
+|-----------|--------------|-------|
+| Left Leg Servo | D2 | S=Signal, V=VCC, G=GND |
+| Right Leg Servo | D3 | S=Signal, V=VCC, G=GND |
+| Left Foot Servo | D4 | S=Signal, V=VCC, G=GND |
+| Right Foot Servo | D5 | S=Signal, V=VCC, G=GND |
+| HC-SR04 Trigger | D9 | S=Trig, V=VCC, G=GND |
+| HC-SR04 Echo | D8 | S=Echo, V=VCC, G=GND |
+| Buzzer | D13 | S=Signal, V=VCC, G=GND |
 
 ---
 
 ## Installation
 
-1. Install [Arduino IDE](https://www.arduino.cc/en/software)
+1. Install [Arduino IDE](https://www.arduino.cc/en/software) (current version)
 2. Install **OttoDIY** via Sketch → Include Library → Manage Libraries
 3. Open `Otto_PSAI_v2.ino`
-4. Set board to **Arduino Nano**, processor to **ATmega328P (Old Bootloader)** if using a clone
+4. Set board to **Arduino Nano**, processor to **ATmega328P (Old Bootloader)**
 5. Select your COM port and upload
 
-> **Tip:** If uploading fails, make sure Otto's power switch is ON while the USB is connected. This lets the servos draw from the battery instead of the USB line, preventing brown-out during upload.
+> **Upload tip:** If you get a `cannot set com-state` error, go to Tools → Serial Monitor to open it, then immediately close it. Try uploading again — this forces a clean COM port handshake and works reliably.
+
+> **Power tip:** Flip Otto's power switch ON before uploading. This lets the servos draw from the battery instead of the USB line, preventing brown-out during upload.
 
 ---
 
@@ -114,12 +123,22 @@ Each mood has its own melodic phrase — not just beeps:
 - Melodic buzzer phrases per mood
 - Intrusive thought mechanic for unpredictability
 - Millis()-based non-blocking main loop
+- Wall avoidance system (independent of mood system)
+- Random exploration walking with post-walk direction changes
 - Fixed all bugs from v1
 
 ### v1
 - Initial concept — random action selection via integer
 - Basic proximity reaction
 - Laid the groundwork for PSAI
+
+---
+
+## Links
+
+- **Etsy Shop** — [etsy.com/shop/DepphensDepot](https://etsy.com/shop/DepphensDepot)
+- **GitHub** — [github.com/DeprecatedPhoenix/Otto-PSAI](https://github.com/DeprecatedPhoenix/Otto-PSAI)
+- **Otto DIY** — [ottodiy.com](https://www.ottodiy.com)
 
 ---
 
